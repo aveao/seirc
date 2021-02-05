@@ -63,26 +63,28 @@ class StackHandler(object):
         """
         log("Showing reply to %s", str(msg))
 
-        # Don't have the message being replied to in cache? Bail. Caller will fall
-        # back to normal message display.
+        jump_link = "https://chat.stackexchange.com/transcript/{0}?m={1}#{1}".format(msg.room.id, msg.parent_message_id)
+
+        # Don't have the message being replied to in cache? Just show URL.
         replied_to = self._msg_cache.get(msg.parent_message_id, None)
-        if not replied_to:
-            return False
+        if replied_to:
+            # Strip @user from start of original context so we get actual message content.
+            context = replied_to.content
+            if context.startswith("@"):
+                [_, context] = context.split(None, 1)
+            context = toplaintext(context, strip_tags=True)
 
-        # Strip @user from start of original context so we get actual message content.
-        context = replied_to.content
-        if context.startswith("@"):
-            [_, context] = context.split(None, 1)
-        context = toplaintext(context, strip_tags=True)
+            prefix = ""
+            if not msg.content.startswith("@"):
+                # Prefix the message with the name of the user being replied to.
+                prefix = "@" + replied_to.user.name
 
-        prefix = ""
-        if not msg.content.startswith("@"):
-            # Prefix the message with the name of the user being replied to.
-            prefix = "@" + replied_to.user.name
+            # TODO: configurable context length
+            # TODO: configure whether context goes at start or at end
+            suffix = " [re: %s%s (%s)]" % (context[0:16], len(context) > 16 and "…" or "", jump_link)
+        else:
+            suffix = " [re: unknown (%s)]" % (jump_link)
 
-        # TODO: configurable context length
-        # TODO: configure whether context goes at start or at end
-        suffix = " [re: %s%s]" % (context[0:16], len(context) > 16 and "…" or "")
         self._send_lines(
             tonick(msg.user.name),
             tochannel(msg.room.name),
