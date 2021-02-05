@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 # pylint: disable-all
 
 from __future__ import print_function
