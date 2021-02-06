@@ -66,7 +66,7 @@ class StackHandler(object):
         jump_link = "https://chat.stackexchange.com/transcript/{0}?m={1}#{1}".format(msg.room.id, msg.parent_message_id)
 
         prefix = ""
-        suffix = " [re: unknown (%s)]" % (jump_link)
+        suffix = " [re: %s]" % (jump_link)
 
         # Don't have the message being replied to in cache? Just show URL.
         replied_to = self._msg_cache.get(msg.parent_message_id, None)
@@ -83,7 +83,7 @@ class StackHandler(object):
 
             # TODO: configurable context length
             # TODO: configure whether context goes at start or at end
-            suffix = " [re: %s%s (%s)]" % (context[0:16], len(context) > 16 and "…" or "", jump_link)
+            suffix = " [re: %s%s (%s)]" % (context[0:64], len(context) > 64 and "…" or "", jump_link)
 
         self._send_lines(
             tonick(msg.user.name),
