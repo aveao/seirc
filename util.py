@@ -54,6 +54,8 @@ def toplaintext(text, strip_tags=False):
         .replace("</code>", "`")
     )
 
+    qa_embed = "apple-touch-icon.png" in text and ("/questions/" in text or "/q/" in text)
+
     # If we see the same link multiple times in a message, we only convert the
     # first one for brevity's sake.
     seen_links = set()
@@ -74,6 +76,17 @@ def toplaintext(text, strip_tags=False):
 
     if strip_tags:
         text = re.sub(r"\s*<[^>]+>", "", text)
+    elif qa_embed:
+        mention = re.findall(r"^@(\S+)", text)
+
+        for link in re.findall(r'\s*<a [^>]*href="([^"]+)"[^>]*>\s*', text):
+            if "/questions/" in text or "/q/" in text:
+                text = link
+                if text.startswith("//"):
+                    text = "https:{}".format(text)
+                if mention:
+                    text = "{}: {}".format(mention[0], text)
+                break
     else:
         # Replace <img> and <a> tags with [img ...] and [...]
         text = re.sub(r'\s*<img [^>]*src="([^"]+)"[^>]*>\s*', fix_img, text)
